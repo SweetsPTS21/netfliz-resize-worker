@@ -1,6 +1,4 @@
 // src/index.js
-import sharp from "sharp";
-
 addEventListener("fetch", (event) => {
     event.respondWith(handle(event.request));
 });
@@ -20,7 +18,6 @@ async function handle(request) {
     const width = match[2] ? parseInt(match[2]) : null;
     const ext = match[3].toLowerCase();
 
-    // map extension → sharp output format
     const formatMap = {jpg: "jpeg", jpeg: "jpeg", png: "png"};
     const outputFormat = formatMap[ext];
 
@@ -29,28 +26,21 @@ async function handle(request) {
     const originUrl = `${ORIGIN_BASE}/${encodedPath}?alt=media`;
 
     // Fetch original file from firebase storage
-    const originResponse = await fetch(originUrl);
+    const originResponse = await fetch(originUrl, {
+        cf: {
+            image: {
+                width: width,
+                fit: "scale-down",
+                quality: 90
+            }
+        }
+    });
+
     if (!originResponse.ok) {
         return new Response("Not found", {status: originResponse.status});
     }
 
-    const arrayBuffer = await originResponse.arrayBuffer();
-    let imageBuffer = arrayBuffer;
-
-    // Resize nếu cần
-    if (width) {
-        imageBuffer = await sharp(arrayBuffer)
-            .resize({width: width})
-            .toFormat(outputFormat)
-            .toBuffer();
-    }
-
-    const headers = new Headers(originResponse.headers);
-    if (!headers.has("Cache-Control")) {
-        headers.set("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-    }
-
-    return new Response(imageBuffer, {
+    return new Response(originResponse.body, {
         headers: {
             "Content-Type": `image/${outputFormat}`,
             "Cache-Control": "public, max-age=31536000, immutable",
