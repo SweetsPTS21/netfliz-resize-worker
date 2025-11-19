@@ -1,0 +1,12 @@
+name = "image-proxy-worker"
+main = "src/index.js"
+compatibility_date = "2025-11-19"
+
+# dev bindings (nếu cần)
+# account_id is required to publish
+account_id = "a5a59691629a572fe2e922a6f6a47dfd"
+# Optional: if you use zones/routes set route instead of routes in dashboard
+routes = ["cdn.swpts.cloud/images/*"]
+
+# If using module workers:
+# type = "javascript"
